@@ -1,7 +1,7 @@
 
 const databaseConnector = require("../Configure/db");
 
-const Darta = async (req, res) => {
+const Department = async (req, res) => {
   const { name, type, pan, email, phone, address, date, document } = req.body;
   
   try {
