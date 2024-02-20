@@ -8,10 +8,11 @@ app.use(cors());
 
 app.use(express.json());
 
+let port = 3000
 // Use the user router
 app.use('/api', userRouter);
 app.use(express.json());
 
-app.listen(3000, () => {
-  console.log(`Server started on port`);
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
 });
