@@ -126,6 +126,9 @@ const verifyDarta = async (req, res) => {
       return res.status(400).json({ message: "Fields cannot be empty!" });
     }
 
+  
+
+
     // Validation .....
 
     let validateQuery = `SELECT * FROM rds.darta WHERE Phone = ${req.body.mobileNumber}`;
@@ -138,18 +141,20 @@ const verifyDarta = async (req, res) => {
 
       if (result && result.length > 0) {
 
-        if(result[0].is_verified == 1)
+        if(result[0].is_verified == req.body.status)
         {
-          return res.status(400).json({ message: "User is Already verified" });
+          return res.status(400).json({ message: "User is Already is current state of status try something diffrent!" });
         }
       
       }
+
+  
 
       if (result && result.length <= 0) {
         return res.status(400).json({ message: "User not registered yet!" });
       }
 
-      let sql = `UPDATE rds.darta SET is_verified = 1 WHERE Phone = ${req.body.mobileNumber}`;
+      let sql = `UPDATE rds.darta SET is_verified = ${req.body.status} WHERE Phone = ${req.body.mobileNumber}`;
 
       databaseConnector.connection.query(sql, (error, result) => {
         if (error) {
@@ -157,7 +162,16 @@ const verifyDarta = async (req, res) => {
           return res.status(500).json({ message: "Database error" });
         }
 
-        return res.status(200).json({ message: "Verified successfully" });
+        if(req && req.body && req.body.status == 0)
+        {
+          return res.status(200).json({ message: "Rejected successfully" , responseData:JSON.stringify(req.body)});
+        }
+        else if(req && req.body && req.body.status == 0)
+        {
+          return res.status(200).json({ message: "Verified successfully" });
+        }
+
+
       });
     });
   } catch (error) {
@@ -204,7 +218,7 @@ module.exports = {
 
           /*
     
- CREATE TABLE db_darta_system.darta (
+ CREATE TABLE rds.darta (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) ,
     type VARCHAR(255) ,

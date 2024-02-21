@@ -3,9 +3,9 @@ var mysql = require("mysql2");
 var connection = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "root", // Add your actual password here
-    database: "rds",
-    port:"3307"
+    password: "P@ssw0rd", // Add your actual password here
+    database: "db_darta_system",
+    port:"3306"
 });
 
 connection.connect(function(error) {
