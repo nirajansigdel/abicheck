@@ -168,10 +168,38 @@ const verifyDarta = async (req, res) => {
 
 
 
+const getDartaDetails = async(req,res)=>
+{
+  try {
+    let queryDetails = `SELECT * FROM rds.darta WHERE 1=1`;
+
+    databaseConnector.connection.query(queryDetails, (error, result) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if(result && result.length <=0)
+      {
+        return res.status(400).json({ message: "Data not found" });
+      }
+
+      return res.status(200).json({ message: "Data successfully Fetched", dataResults:result });
+    });
+
+    
+  } catch (error) {
+    
+    console.log(`Error occured from get darta details ${error}`);
+  }
+
+}
+
+
 
 
 module.exports = {
-  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta
+  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta,getDartaDetails
 };
 
           /*
