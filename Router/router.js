@@ -12,6 +12,8 @@ router.route("/getdarta").get(dartarouter.getAllDarta);
 //register functions and recently added things
 router.route("/register-darta").post(dartarouter.registrationDarta);
 router.route("/verify-darta").post(dartarouter.verifyDarta)
-router.route("/get-darta").get(dartarouter.getDartaDetails)
+router.route("/get-accepted-darta").get(dartarouter.getDartaDetails)
+router.route("/get-rejected-darta-message/:mobileNumber").get(dartarouter.getRejectionDartaDetails)
+
 
 module.exports = router;

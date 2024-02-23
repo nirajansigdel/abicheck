@@ -139,11 +139,11 @@ const verifyDarta = async (req, res) => {
         return res.status(500).json({ message: "Database error" });
       }
 
-      if (result && result.length > 0) {
+      if (result && result.length > 0 && req.body.status ==1) {
 
-        if(result[0].is_verified == req.body.status)
+        if(result[0].is_verified == 1)
         {
-          return res.status(400).json({ message: "User is Already is current state of status try something diffrent!" });
+          return res.status(400).json({ message: "User is Already in accept status try something diffrent!" });
         }
       
       }
@@ -154,7 +154,12 @@ const verifyDarta = async (req, res) => {
         return res.status(400).json({ message: "User not registered yet!" });
       }
 
-      let sql = `UPDATE rds.darta SET is_verified = ${req.body.status} WHERE Phone = ${req.body.mobileNumber}`;
+      let sql = `UPDATE rds.darta SET is_verified = "${req.body.status}" , created_by= "${req.body.mobileNumber}", rejection_message = "" WHERE Phone = ${req.body.mobileNumber}`;
+
+      if(req.body.status == 0)
+      {
+        sql = `UPDATE rds.darta SET is_verified = "${req.body.status}",rejection_message = "${req.body.rejectionMessage}",created_by= "${req.body.mobileNumber}"  WHERE Phone = "${req.body.mobileNumber}"`
+      }
 
       databaseConnector.connection.query(sql, (error, result) => {
         if (error) {
@@ -162,11 +167,11 @@ const verifyDarta = async (req, res) => {
           return res.status(500).json({ message: "Database error" });
         }
 
-        if(req && req.body && req.body.status == 0)
+        if(req && req.body && req.body.status == 0 && result.affectedRows>0)
         {
           return res.status(200).json({ message: "Rejected successfully" , responseData:JSON.stringify(req.body)});
         }
-        else if(req && req.body && req.body.status == 0)
+        else if(req && req.body && req.body.status == 1 && result.affectedRows>0)
         {
           return res.status(200).json({ message: "Verified successfully" });
         }
@@ -185,7 +190,7 @@ const verifyDarta = async (req, res) => {
 const getDartaDetails = async(req,res)=>
 {
   try {
-    let queryDetails = `SELECT * FROM rds.darta WHERE 1=1`;
+    let queryDetails = `SELECT * FROM rds.darta WHERE is_verified = 1`;
 
     databaseConnector.connection.query(queryDetails, (error, result) => {
       if (error) {
@@ -207,13 +212,41 @@ const getDartaDetails = async(req,res)=>
     console.log(`Error occured from get darta details ${error}`);
   }
 
+};
+
+
+const getRejectionDartaDetails = async(req,res)=>
+{
+  try {
+    let queryDetails = `SELECT rejection_message FROM rds.darta WHERE is_verified = 0 and Phone = ${req.params.mobileNumber}`;
+
+    databaseConnector.connection.query(queryDetails, (error, result) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if(result && result.length <=0)
+      {
+        return res.status(400).json({ message: "Data not found" });
+      }
+
+      return res.status(200).json({ rejectionMessage: result });
+    });
+
+    
+  } catch (error) {
+    
+    console.log(`Error occured from get darta details ${error}`);
+  }
+
 }
 
 
 
 
 module.exports = {
-  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta,getDartaDetails
+  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta,getDartaDetails,getRejectionDartaDetails
 };
 
           /*
@@ -230,6 +263,10 @@ module.exports = {
     is_verified TINYINT DEFAULT 0
 );
 
+
+ALTER TABLE rds.darta
+ADD COLUMN rejection_message TEXT,
+ADD COLUMN created_by VARCHAR(255);
 
 );
 */
