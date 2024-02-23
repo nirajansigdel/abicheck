@@ -13,7 +13,7 @@ router.route("/getdarta").get(dartarouter.getAllDarta);
 router.route("/register-darta").post(dartarouter.registrationDarta);
 router.route("/verify-darta").post(dartarouter.verifyDarta)
 router.route("/get-accepted-darta").get(dartarouter.getDartaDetails)
-router.route("/get-rejected-darta-message/:mobileNumber").get(dartarouter.getRejectionDartaDetails)
+router.route("/get-user-darta-message").post(dartarouter.getAcceptRejectMessage)
 
 
 module.exports = router;

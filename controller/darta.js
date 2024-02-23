@@ -154,7 +154,7 @@ const verifyDarta = async (req, res) => {
         return res.status(400).json({ message: "User not registered yet!" });
       }
 
-      let sql = `UPDATE rds.darta SET is_verified = "${req.body.status}" , created_by= "${req.body.mobileNumber}", rejection_message = "" WHERE Phone = ${req.body.mobileNumber}`;
+      let sql = `UPDATE rds.darta SET is_verified = "${req.body.status}" , created_by= "${req.body.mobileNumber}", rejection_message = "Congratulations your company has been rejistred sucessfully!" WHERE Phone = ${req.body.mobileNumber}`;
 
       if(req.body.status == 0)
       {
@@ -169,10 +169,47 @@ const verifyDarta = async (req, res) => {
 
         if(req && req.body && req.body.status == 0 && result.affectedRows>0)
         {
-          return res.status(200).json({ message: "Rejected successfully" , responseData:JSON.stringify(req.body)});
+
+          // todo 
+
+      let acceptRejectMessage = `${req.body.rejectionMessage}`
+      let mobileNumber = req.body.mobileNumber
+
+      const logSql = "INSERT INTO rds.accept_reject_messages (accept_reject_message,mobile) VALUES (?,?)";
+
+      databaseConnector.connection.query(logSql, [acceptRejectMessage,mobileNumber], (error, result) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: "Database error" });
+        }
+
+      });
+
+      if(result && result.affectedRows >0)
+      {
+        return res.status(200).json({ message: "Rejected successfully" , responseData:JSON.stringify(req.body)});
+      }
+
+          
+       
         }
         else if(req && req.body && req.body.status == 1 && result.affectedRows>0)
         {
+
+           // todo 
+
+      let acceptRejectMessage = "Congratulations your company has been rejistred sucessfully!"
+      let mobileNumber = req.body.mobileNumber
+
+      const logSql = "INSERT INTO rds.accept_reject_messages (accept_reject_message,mobile) VALUES (?,?)";
+
+      databaseConnector.connection.query(logSql, [acceptRejectMessage,mobileNumber], (error, result) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: "Database error" });
+        }
+
+      });
           return res.status(200).json({ message: "Verified successfully" });
         }
 
@@ -215,10 +252,10 @@ const getDartaDetails = async(req,res)=>
 };
 
 
-const getRejectionDartaDetails = async(req,res)=>
+const getAcceptRejectMessage = async(req,res)=>
 {
   try {
-    let queryDetails = `SELECT rejection_message FROM rds.darta WHERE is_verified = 0 and Phone = ${req.params.mobileNumber}`;
+    let queryDetails = `SELECT * FROM rds.accept_reject_messages WHERE mobile = "${req.body.mobileNumber}"`;
 
     databaseConnector.connection.query(queryDetails, (error, result) => {
       if (error) {
@@ -231,7 +268,7 @@ const getRejectionDartaDetails = async(req,res)=>
         return res.status(400).json({ message: "Data not found" });
       }
 
-      return res.status(200).json({ rejectionMessage: result });
+      return res.status(200).json({ data: result });
     });
 
     
@@ -246,7 +283,7 @@ const getRejectionDartaDetails = async(req,res)=>
 
 
 module.exports = {
-  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta,getDartaDetails,getRejectionDartaDetails
+  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta,getDartaDetails,getAcceptRejectMessage
 };
 
           /*
@@ -267,6 +304,15 @@ module.exports = {
 ALTER TABLE rds.darta
 ADD COLUMN rejection_message TEXT,
 ADD COLUMN created_by VARCHAR(255);
+
+
+CREATE TABLE rds.accept_reject_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    accept_reject_message TEXT,
+    mobile VARCHAR(255)
+);
+
+
 
 );
 */
