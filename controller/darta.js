@@ -29,7 +29,7 @@ const Darta = async (req, res) => {
 // backend/controllers/dartaController.js
 const getAllDarta = async (req, res) => {
   try {
-    const sql = "SELECT * FROM darta";
+    const sql = "SELECT * FROM rds.darta where created_by is null";
 
     databaseConnector.connection.query(sql, (error, results) => {
       if (error) {
