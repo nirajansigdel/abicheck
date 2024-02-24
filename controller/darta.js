@@ -2,22 +2,27 @@ const databaseConnector = require("../Configure/db");
 
 const Darta = async (req, res) => {
   const { name, type, pan, email, phone, address, date, document } = req.body;
-  
+
   try {
     if (!name || !type || !email || !phone || !address || !date || !document) {
       return res.status(400).json({ message: "Fields cannot be empty" });
     }
 
-    const sql = "INSERT INTO darta (name, type, address, Phone, Email, document, date) VALUES (?,?,?,?,?,?,?)";
+    const sql =
+      "INSERT INTO darta (name, type, address, Phone, Email, document, date) VALUES (?,?,?,?,?,?,?)";
 
-    databaseConnector.connection.query(sql, [name, type, pan, address, phone, email, document, date], (error, result) => {
-      if (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Database error" });
+    databaseConnector.connection.query(
+      sql,
+      [name, type, pan, address, phone, email, document, date],
+      (error, result) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: "Database error" });
+        }
+
+        return res.status(200).json({ message: "Insert successfully" });
       }
-
-      return res.status(200).json({ message: "Insert successfully" });
-    });
+    );
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error" });
@@ -52,7 +57,9 @@ const deleteDarta = async (req, res) => {
     const { idea } = req.body; // Assuming you pass the idea value in the request body
 
     if (!idea) {
-      return res.status(400).json({ message: "Missing required parameter: idea" });
+      return res
+        .status(400)
+        .json({ message: "Missing required parameter: idea" });
     }
 
     const sql = "DELETE FROM darta WHERE id = ?";
@@ -64,7 +71,9 @@ const deleteDarta = async (req, res) => {
       }
 
       if (results.affectedRows === 0) {
-        return res.status(404).json({ message: "No matching row found for deletion" });
+        return res
+          .status(404)
+          .json({ message: "No matching row found for deletion" });
       }
 
       console.log("Deleted successfully:", results);
@@ -77,10 +86,9 @@ const deleteDarta = async (req, res) => {
   }
 };
 
-
 const registrationDarta = async (req, res) => {
   const { name, type, email, phone, address, date, document } = req.body;
-  
+
   try {
     if (!name || !type || !email || !phone || !address || !date || !document) {
       return res.status(400).json({ message: "Fields cannot be empty" });
@@ -95,23 +103,26 @@ const registrationDarta = async (req, res) => {
         console.error(error);
         return res.status(500).json({ message: "Database error" });
       }
-   
+
       if (result.length > 0) {
         return res.status(400).json({ message: "User already registered!" });
       }
 
+      const sql =
+        "INSERT INTO darta (name, type, address, Phone, Email, document, date) VALUES (?,?,?,?,?,?,?)";
 
+      databaseConnector.connection.query(
+        sql,
+        [name, type, address, phone, email, document, date],
+        (error, result) => {
+          if (error) {
+            console.error(error);
+            return res.status(500).json({ message: "Database error" });
+          }
 
-      const sql = "INSERT INTO darta (name, type, address, Phone, Email, document, date) VALUES (?,?,?,?,?,?,?)";
-
-      databaseConnector.connection.query(sql, [name, type, address, phone, email, document, date], (error, result) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: "Database error" });
+          return res.status(200).json({ message: "Insert successfully" });
         }
-
-        return res.status(200).json({ message: "Insert successfully" });
-      });
+      );
     });
   } catch (error) {
     console.error(error);
@@ -119,15 +130,11 @@ const registrationDarta = async (req, res) => {
   }
 };
 
-
 const verifyDarta = async (req, res) => {
   try {
     if (!req.body.mobileNumber || !req.body.status) {
       return res.status(400).json({ message: "Fields cannot be empty!" });
     }
-
-  
-
 
     // Validation .....
 
@@ -139,16 +146,16 @@ const verifyDarta = async (req, res) => {
         return res.status(500).json({ message: "Database error" });
       }
 
-      if (result && result.length > 0 && req.body.status ==1) {
-
-        if(result[0].is_verified == 1)
-        {
-          return res.status(400).json({ message: "User is Already in accept status try something diffrent!" });
+      if (result && result.length > 0 && req.body.status == 1) {
+        if (result[0].is_verified == 1) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "User is Already in accept status try something diffrent!",
+            });
         }
-      
       }
-
-  
 
       if (result && result.length <= 0) {
         return res.status(400).json({ message: "User not registered yet!" });
@@ -156,9 +163,8 @@ const verifyDarta = async (req, res) => {
 
       let sql = `UPDATE rds.darta SET is_verified = "${req.body.status}" , created_by= "${req.body.mobileNumber}", rejection_message = "Congratulations your company has been rejistred sucessfully!" WHERE Phone = ${req.body.mobileNumber}`;
 
-      if(req.body.status == 0)
-      {
-        sql = `UPDATE rds.darta SET is_verified = "${req.body.status}",rejection_message = "${req.body.rejectionMessage}",created_by= "${req.body.mobileNumber}"  WHERE Phone = "${req.body.mobileNumber}"`
+      if (req.body.status == 0) {
+        sql = `UPDATE rds.darta SET is_verified = "${req.body.status}",rejection_message = "${req.body.rejectionMessage}",created_by= "${req.body.mobileNumber}"  WHERE Phone = "${req.body.mobileNumber}"`;
       }
 
       databaseConnector.connection.query(sql, (error, result) => {
@@ -167,53 +173,66 @@ const verifyDarta = async (req, res) => {
           return res.status(500).json({ message: "Database error" });
         }
 
-        if(req && req.body && req.body.status == 0 && result.affectedRows>0)
-        {
+        if (
+          req &&
+          req.body &&
+          req.body.status == 0 &&
+          result.affectedRows > 0
+        ) {
+          // todo
 
-          // todo 
+          let acceptRejectMessage = `${req.body.rejectionMessage}`;
+          let mobileNumber = req.body.mobileNumber;
 
-      let acceptRejectMessage = `${req.body.rejectionMessage}`
-      let mobileNumber = req.body.mobileNumber
+          const logSql =
+            "INSERT INTO rds.accept_reject_messages (accept_reject_message,mobile) VALUES (?,?)";
 
-      const logSql = "INSERT INTO rds.accept_reject_messages (accept_reject_message,mobile) VALUES (?,?)";
+          databaseConnector.connection.query(
+            logSql,
+            [acceptRejectMessage, mobileNumber],
+            (error, result) => {
+              if (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Database error" });
+              }
+            }
+          );
 
-      databaseConnector.connection.query(logSql, [acceptRejectMessage,mobileNumber], (error, result) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: "Database error" });
-        }
+          if (result && result.affectedRows > 0) {
+            return res
+              .status(200)
+              .json({
+                message: "Rejected successfully",
+                responseData: JSON.stringify(req.body),
+              });
+          }
+        } else if (
+          req &&
+          req.body &&
+          req.body.status == 1 &&
+          result.affectedRows > 0
+        ) {
+          // todo
 
-      });
+          let acceptRejectMessage =
+            "Congratulations your company has been rejistred sucessfully!";
+          let mobileNumber = req.body.mobileNumber;
 
-      if(result && result.affectedRows >0)
-      {
-        return res.status(200).json({ message: "Rejected successfully" , responseData:JSON.stringify(req.body)});
-      }
+          const logSql =
+            "INSERT INTO rds.accept_reject_messages (accept_reject_message,mobile) VALUES (?,?)";
 
-          
-       
-        }
-        else if(req && req.body && req.body.status == 1 && result.affectedRows>0)
-        {
-
-           // todo 
-
-      let acceptRejectMessage = "Congratulations your company has been rejistred sucessfully!"
-      let mobileNumber = req.body.mobileNumber
-
-      const logSql = "INSERT INTO rds.accept_reject_messages (accept_reject_message,mobile) VALUES (?,?)";
-
-      databaseConnector.connection.query(logSql, [acceptRejectMessage,mobileNumber], (error, result) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: "Database error" });
-        }
-
-      });
+          databaseConnector.connection.query(
+            logSql,
+            [acceptRejectMessage, mobileNumber],
+            (error, result) => {
+              if (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Database error" });
+              }
+            }
+          );
           return res.status(200).json({ message: "Verified successfully" });
         }
-
-
       });
     });
   } catch (error) {
@@ -222,10 +241,7 @@ const verifyDarta = async (req, res) => {
   }
 };
 
-
-
-const getDartaDetails = async(req,res)=>
-{
+const getDartaDetails = async (req, res) => {
   try {
     let queryDetails = `SELECT * FROM rds.darta WHERE is_verified = 1`;
 
@@ -235,25 +251,20 @@ const getDartaDetails = async(req,res)=>
         return res.status(500).json({ message: "Database error" });
       }
 
-      if(result && result.length <=0)
-      {
+      if (result && result.length <= 0) {
         return res.status(400).json({ message: "Data not found" });
       }
 
-      return res.status(200).json({ message: "Data successfully Fetched", dataResults:result });
+      return res
+        .status(200)
+        .json({ message: "Data successfully Fetched", dataResults: result });
     });
-
-    
   } catch (error) {
-    
     console.log(`Error occured from get darta details ${error}`);
   }
-
 };
 
-
-const getAcceptRejectMessage = async(req,res)=>
-{
+const getAcceptRejectMessage = async (req, res) => {
   try {
     let queryDetails = `SELECT * FROM rds.accept_reject_messages WHERE mobile = "${req.body.mobileNumber}"`;
 
@@ -263,30 +274,28 @@ const getAcceptRejectMessage = async(req,res)=>
         return res.status(500).json({ message: "Database error" });
       }
 
-      if(result && result.length <=0)
-      {
+      if (result && result.length <= 0) {
         return res.status(400).json({ message: "Data not found" });
       }
 
       return res.status(200).json({ data: result });
     });
-
-    
   } catch (error) {
-    
     console.log(`Error occured from get darta details ${error}`);
   }
-
-}
-
-
-
-
-module.exports = {
-  Darta,getAllDarta,deleteDarta,registrationDarta,verifyDarta,getDartaDetails,getAcceptRejectMessage
 };
 
-          /*
+module.exports = {
+  Darta,
+  getAllDarta,
+  deleteDarta,
+  registrationDarta,
+  verifyDarta,
+  getDartaDetails,
+  getAcceptRejectMessage,
+};
+
+/*
     
  CREATE TABLE rds.darta (
     id INT AUTO_INCREMENT PRIMARY KEY,
