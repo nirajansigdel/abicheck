@@ -114,13 +114,15 @@ const registrationDarta = async (req, res) => {
       databaseConnector.connection.query(
         sql,
         [name, type, address, phone, email, document, date],
-        (error, result) => {
+        async (error, result) => {
           if (error) {
             console.error(error);
             return res.status(500).json({ message: "Database error" });
           }
 
-          return res.status(200).json({ message: "Insert successfully" });
+          if (result) {
+            return res.status(200).json({ message: "Insert successfully" , data: result.insertId});
+          }
         }
       );
     });
@@ -148,12 +150,9 @@ const verifyDarta = async (req, res) => {
 
       if (result && result.length > 0 && req.body.status == 1) {
         if (result[0].is_verified == 1) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "User is Already in accept status try something diffrent!",
-            });
+          return res.status(400).json({
+            message: "User is Already in accept status try something diffrent!",
+          });
         }
       }
 
@@ -199,12 +198,10 @@ const verifyDarta = async (req, res) => {
           );
 
           if (result && result.affectedRows > 0) {
-            return res
-              .status(200)
-              .json({
-                message: "Rejected successfully",
-                responseData: JSON.stringify(req.body),
-              });
+            return res.status(200).json({
+              message: "Rejected successfully",
+              responseData: JSON.stringify(req.body),
+            });
           }
         } else if (
           req &&
@@ -285,6 +282,162 @@ const getAcceptRejectMessage = async (req, res) => {
   }
 };
 
+const getDartaByEmail = async (req, res) => {
+  const { email } = req.params;
+  if (!email) {
+    return res.status(400).json({ message: "Missing Fields" });
+  }
+
+  const query = "SELECT * FROM darta WHERE EMAIL=?";
+  databaseConnector.connection.query(query, [email], async (error, result) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (result && result.length <= 0) {
+      return res.status(400).json({ message: "Data not found" });
+    }
+
+    return res.status(200).json({ data: result });
+  });
+};
+
+const getDartaById = async (req, res) => {
+  const { id } = req.params;
+  const query = "SELECT * FROM darta WHERE id=?";
+  databaseConnector.connection.query(query, [id], async (error, result) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Database error" });
+    }
+    if (result.length > 0) {
+      return res.status(200).json({ data: result[0] });
+    }
+    return res.status(200).json({ data: result });
+
+  });
+};
+const getUnverifiedData = async (req, res) => {
+  try {
+    const sql = "SELECT * FROM darta where is_verified = 0";
+
+    databaseConnector.connection.query(sql, (error, results) => {
+      if (error) {
+        console.error("Error in getAllDarta:", error);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      return res.status(200).json(results);
+    });
+  } catch (error) {
+    console.error("Error in getAllDarta:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const putVerifyDarta = async (req, res) => {
+  const { isFormVerified, isDocVerified, isPaymentVerified, emailId } =
+    req.body;
+  const sqlQuery =
+    "UPDATE darta SET isFormVerified=?, isDocVerified=?, isPaymentVerified=? where Email=?";
+
+  try {
+    databaseConnector.connection.query(
+      sqlQuery,
+      [isFormVerified, isDocVerified, isPaymentVerified, emailId],
+      async (error, results) => {
+        if (error) {
+          return res.status(500).json({ message: "Database error" });
+        }
+        if (results) {
+          if (isDocVerified && isFormVerified && isPaymentVerified)
+            await putIsDartaVerify({ emailId: emailId, isVerify: false });
+          return res.status(200).json(results);
+        }
+      }
+    );
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const putDiscardVerify = async (req, res) => {
+  const { isFormVerified, isDocVerified, isPaymentVerified, remarks, emailId } =
+    req.body;
+  const sqlQuery =
+    "UPDATE darta SET isFormVerified=?, isDocVerified=?, isPaymentVerified=?, rejection_message=? where Email=?";
+
+  try {
+    databaseConnector.connection.query(
+      sqlQuery,
+      [isFormVerified, isDocVerified, isPaymentVerified, remarks, emailId],
+      async (error, results) => {
+        if (error) {
+          return res.status(500).json({ message: "Database error" });
+        }
+        if (results) {
+          await putIsDartaVerify({ emailId: emailId, isVerify: false });
+          return res.status(200).json({ message: "Successfully updated" });
+        }
+      }
+    );
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const downloadVerifiedDarta = async (req, res) => {
+  const isVerify = req.params.isVerify === "true";
+  const query = "SELECT * FROM darta where is_verified =?"; // Replace 'your_table' with your table name
+  databaseConnector.connection.query(
+    query,
+    [isVerify],
+    (error, results, fields) => {
+      if (error) {
+        console.error("Error executing query: " + error.stack);
+        return res.status(500).send("Error fetching data from database");
+      }
+
+      // Format data as CSV
+      const fieldNames = fields.map((field) => field.name);
+
+      // Format data as CSV
+      const csvData = [
+        fieldNames.join(","), // Include field names as the first row
+        ...results.map((row) =>
+          fieldNames.map((fieldName) => row[fieldName]).join(",")
+        ),
+      ].join("\n");
+      // Set response headers for file download
+      res.setHeader("Content-disposition", "attachment; filename=data.csv");
+      res.set("Content-Type", "text/csv");
+
+      // Send CSV data as response
+      res.status(200).send(csvData);
+    }
+  );
+};
+
+const putIsDartaVerify = async (data, res) => {
+  const { emailId, isVerify } = data;
+
+  const sqlQuery = "UPDATE darta SET is_verified=? where Email=?";
+
+  databaseConnector.connection.query(
+    sqlQuery,
+    [isVerify, emailId],
+    (errors, results, fields) => {
+      if (errors) {
+        return false;
+      }
+      if (results) {
+        return true;
+      }
+    }
+  );
+};
+
 module.exports = {
   Darta,
   getAllDarta,
@@ -293,6 +446,13 @@ module.exports = {
   verifyDarta,
   getDartaDetails,
   getAcceptRejectMessage,
+  getDartaByEmail,
+  getUnverifiedData,
+  putVerifyDarta,
+  putDiscardVerify,
+  downloadVerifiedDarta,
+  putIsDartaVerify,
+  getDartaById,
 };
 
 /*

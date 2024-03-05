@@ -57,7 +57,7 @@
             }
 
             // Include the user role in the response
-            res.status(200).json({ message: "Login successfully", role: user.role });
+            res.status(200).json({ message: "Login successfully", userDetail: user });
         });
     } catch (error) {
         console.error(error);
