@@ -1,6 +1,6 @@
 const connector = require("../Configure/db");
 const { createToken } = require("./token");
-const {decryptAES, encryptAES} = require("../utils/encrypt")
+const { decryptAES, encryptAES } = require("../utils/encrypt");
 
 const addNewUser = async (req, res) => {
   const { walletId, password } = req.body;
@@ -10,7 +10,7 @@ const addNewUser = async (req, res) => {
 
   const walletData = {
     WalletId: walletId,
-    Password:JSON.stringify(encryptAES(password)),
+    Password: encryptAES(password),
   };
 
   const sqlQuery = "INSERT INTO wallet SET ?";
@@ -49,8 +49,8 @@ const isWalletUserExist = async (req, res) => {
 
       // User found, now check if password matches
       const user = results[0]; // Assuming walletId is unique
-      const parsePassword= JSON.parse(user.Password)
-      const decryptedPass= decryptAES(parsePassword.encryptedData,parsePassword.iv )
+      const parsePassword = user.Password;
+      const decryptedPass = decryptAES(parsePassword);
       if (decryptedPass !== password) {
         // Password does not match
         return res.status(401).json({ message: "Incorrect password" });

@@ -6,7 +6,6 @@ const walletRouter = require("../controller/wallet.js");
 const tokenRouter = require("../controller/token.js");
 const stripeRouter = require("../controller/stripe.js");
 
-
 const router = express.Router();
 
 router.route("/login").post(authrouter.Login);
@@ -26,6 +25,8 @@ router.route("/getDartaByEmail/:email").get(dartarouter.getDartaByEmail);
 router.route("/getUnverifiedDarta").get(dartarouter.getUnverifiedData);
 router.route("/putDartaVerify").put(dartarouter.putVerifyDarta);
 router.route("/putDiscardVerify").put(dartarouter.putDiscardVerify);
+router.route("/isDupEmail/:email").post(dartarouter.isDupEmail);
+router.route("/isDupName/:name").post(dartarouter.isDupName);
 
 //wallet
 router.route("/add-wallet").post(walletRouter.addNewUser);
@@ -38,12 +39,12 @@ router.route("/get-payment/:emailId").get(paymentRouter.getPaymentByWalletId);
 //token
 router.route("/validateToken").post(tokenRouter.validateToken);
 
-
 //Report
-router.route("/downloadVerifiedDarta/:isVerify").get(dartarouter.downloadVerifiedDarta);
+router
+  .route("/downloadVerifiedDarta/:isVerify")
+  .get(dartarouter.downloadVerifiedDarta);
 
 // stripe
 router.route("/postPaymentIntent").post(stripeRouter.postPaymentIntent);
-
 
 module.exports = router;

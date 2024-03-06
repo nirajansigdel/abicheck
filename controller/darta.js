@@ -121,7 +121,9 @@ const registrationDarta = async (req, res) => {
           }
 
           if (result) {
-            return res.status(200).json({ message: "Insert successfully" , data: result.insertId});
+            return res
+              .status(200)
+              .json({ message: "Insert successfully", data: result.insertId });
           }
         }
       );
@@ -315,7 +317,6 @@ const getDartaById = async (req, res) => {
       return res.status(200).json({ data: result[0] });
     }
     return res.status(200).json({ data: result });
-
   });
 };
 const getUnverifiedData = async (req, res) => {
@@ -438,6 +439,33 @@ const putIsDartaVerify = async (data, res) => {
   );
 };
 
+const isDupEmail = async (req, res) => {
+  const { email } = req.params;
+  const sqlQuery = "SELECT * FROM darta WHERE EMAIL=?";
+  databaseConnector.connection.query(sqlQuery, [email], (error, result) => {
+    if (error) {
+      return res.status(500).json({ message: "Database Error" });
+    }
+    if (result.length > 0) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    return res.status(200).json({ message: "Valid Fields" });
+  });
+};
+
+const isDupName = async (req, res) => {
+  const { name } = req.params;
+  const sqlQuery = "SELECT * FROM darta WHERE Name=?";
+  databaseConnector.connection.query(sqlQuery, [name], (error, result) => {
+    if (error) {
+      return res.status(500).json({ message: "Database Error" });
+    }
+    if (result.length > 0) {
+      return res.status(400).json({ message: "Name already exists" });
+    }
+    return res.status(200).json({ message: "Valid Fields" });
+  });
+};
 module.exports = {
   Darta,
   getAllDarta,
@@ -452,6 +480,8 @@ module.exports = {
   putDiscardVerify,
   downloadVerifiedDarta,
   putIsDartaVerify,
+  isDupName,
+  isDupEmail,
   getDartaById,
 };
 

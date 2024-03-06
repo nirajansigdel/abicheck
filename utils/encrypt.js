@@ -1,28 +1,27 @@
-const crypto = require("crypto");
-const key = "4e7d9f6a67cfb22a0b4c43d8e7c3e0a8";
-
-const encryptAES = (text) => {
-  const iv = crypto.randomBytes(16);
-  // Generate a random IV (Initialization Vector)
-  const cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(key), iv);
-
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return {
-    iv: iv.toString("hex"),
-    encryptedData: encrypted,
-  };
+const encryptAES = (password) => {
+  let encryptedPassword = "";
+  for (let i = 0; i < password.length; i++) {
+    const charCode = password.charCodeAt(i);
+    // Shift each character by a fixed amount
+    const shiftedCharCode = charCode + 1; // For example, shifting by 1
+    // Additional process: Convert shifted char code to hexadecimal
+    const encryptedCharCode = shiftedCharCode.toString(16);
+    encryptedPassword += encryptedCharCode;
+  }
+  return encryptedPassword;
 };
 
-const decryptAES = (encryptedData, iv) => {
-  const decipher = crypto.createDecipheriv(
-    "aes-256-cbc",
-    Buffer.from(key),
-    Buffer.from(iv, "hex")
-  );
-  let decrypted = decipher.update(encryptedData, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
+const decryptAES = (encryptedPassword) => {
+  let decryptedPassword = "";
+  for (let i = 0; i < encryptedPassword.length; i += 2) {
+    const hexCode = encryptedPassword.substr(i, 2);
+    // Reverse the additional process: Convert hexadecimal back to decimal
+    const shiftedCharCode = parseInt(hexCode, 16);
+    // Reverse the shift applied during encryption
+    const decryptedCharCode = shiftedCharCode - 1; // Shifting back by 1
+    decryptedPassword += String.fromCharCode(decryptedCharCode);
+  }
+  return decryptedPassword;
 };
 
 module.exports = { encryptAES, decryptAES };
