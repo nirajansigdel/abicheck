@@ -3,11 +3,8 @@ const mailSender = require("../utils/sendEmail");
 const connector = require("../Configure/db");
 
 const createToken = async (req, res) => {
-  const { walletId, package: dartaPackage } = req.body;
-
+  const { walletId } = req.body;
   const createdDate = new Date().toISOString().slice(0, 19).replace("T", " ");
-  const endDate = new Date(createdDate);
-  endDate.setMonth(endDate.getMonth() + dartaPackage);
 
   const tokenData = {
     WalletId: walletId,
@@ -38,12 +35,28 @@ const createToken = async (req, res) => {
               console.error("Error creating token: " + error.message);
               //   return res.status(500).json({ message: "Error creating token user" });
             }
-            console.log({results})
+            console.log({ results });
             if (results) {
-              const isSent = await mailSender.sendEmail(
-                walletId,
-                "Check Token",
-                `Here is your token:${results.Token}`
+              const sqlSelectQuery = "SELECT * FROM token WHERE WalletId=?";
+              connector.connection.query(
+                sqlSelectQuery,
+                [walletId],
+                async (selectError, selectResults, selectFields) => {
+                  if (selectError) {
+                    console.error(
+                      "Error fetching updated record: " + selectError.message
+                    );
+                    // Handle select error
+                  } else {
+                    // Use the updated record from selectResults
+                    const updatedRecord = selectResults[0]; // Assuming walletId is unique
+                    const isSent = await mailSender.sendEmail(
+                      walletId,
+                      "Token",
+                      `Here is your token:${updatedRecord.Token} `
+                    );
+                  }
+                }
               );
             }
           }
@@ -96,7 +109,7 @@ const createToken = async (req, res) => {
 };
 
 const validateToken = (req, res) => {
-  const { token, walletId } = req;
+  const { token, walletId } = req.body;
   const sqlQuery = "SELECT * FROM token where WalletId=? AND Token=?";
 
   connector.connection.query(
@@ -105,14 +118,15 @@ const validateToken = (req, res) => {
     async (error, results, fields) => {
       if (error) {
         console.error("Error while validating token: " + error.message);
-        //   return res.status(500).json({ message: "Error creating token user" });
+        return res.status(500).json({ message: "Error creating token user" });
       }
-      if (!results) {
+      console.log({ results });
+      if (results.length === 0) {
         // User with the given walletId does not exist
         return res.status(400).json({ message: "Token does not exist" });
       }
 
-      if (results) {
+      if (results.length > 0) {
         return res.status(200).json({ message: "Valid token" });
       }
     }

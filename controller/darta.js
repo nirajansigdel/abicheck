@@ -342,7 +342,6 @@ const putVerifyDarta = async (req, res) => {
     req.body;
   const sqlQuery =
     "UPDATE darta SET isFormVerified=?, isDocVerified=?, isPaymentVerified=? where Email=?";
-
   try {
     databaseConnector.connection.query(
       sqlQuery,
@@ -352,8 +351,24 @@ const putVerifyDarta = async (req, res) => {
           return res.status(500).json({ message: "Database error" });
         }
         if (results) {
+          postNotification({
+            isVerified: isFormVerified,
+            type: "Form",
+            email: emailId,
+          });
+          postNotification({
+            isVerified: isDocVerified,
+            type: "Document",
+            email: emailId,
+          });
+          postNotification({
+            isVerified: isPaymentVerified,
+            type: "Payment",
+            email: emailId,
+          });
           if (isDocVerified && isFormVerified && isPaymentVerified)
-            await putIsDartaVerify({ emailId: emailId, isVerify: false });
+            await putIsDartaVerify({ emailId: emailId, isVerify: true });
+
           return res.status(200).json(results);
         }
       }
@@ -379,6 +394,21 @@ const putDiscardVerify = async (req, res) => {
         }
         if (results) {
           await putIsDartaVerify({ emailId: emailId, isVerify: false });
+          await postNotification({
+            isVerified: isFormVerified,
+            type: "Form",
+            email: emailId,
+          });
+          await postNotification({
+            isVerified: isDocVerified,
+            type: "Document",
+            email: emailId,
+          });
+          await postNotification({
+            isVerified: isPaymentVerified,
+            type: "Payment",
+            email: emailId,
+          });
           return res.status(200).json({ message: "Successfully updated" });
         }
       }
@@ -466,6 +496,53 @@ const isDupName = async (req, res) => {
     return res.status(200).json({ message: "Valid Fields" });
   });
 };
+
+const postNotification = async (data) => {
+  const { isVerified, type, email } = data;
+  const message = isVerified
+    ? `${type} is verified for ${email}`
+    : `${type} is not verified ${email}`;
+
+  const insertData = {
+    accept_reject_messages: message,
+    email: email,
+  };
+
+  const query =
+    "INSERT INTO rds.accept_reject_messages (accept_reject_message, email) VALUES (?, ?)";
+
+  try {
+    databaseConnector.connection.query(
+      query,
+      [message, email],
+      async (errors, results, fields) => {
+        if (errors) {
+          return false;
+          // reject(error);
+        }
+        if (results) {
+          return true;
+          // resolve(true);
+        }
+      }
+    );
+  } catch (error) {
+    console.log({ error });
+  }
+};
+
+const getNotificationsById = async (req, res) => {
+  const { email } = req.params;
+  const query = "SELECT * from accept_reject_messages WHERE email=? ";
+  databaseConnector.connection.query(query, [email], (errors, results) => {
+    if (errors) {
+      return res.status(500).json({ message: "Database error" });
+    }
+    if (results.length > 0) {
+      return res.status(200).json({ data: results });
+    }
+  });
+};
 module.exports = {
   Darta,
   getAllDarta,
@@ -483,6 +560,7 @@ module.exports = {
   isDupName,
   isDupEmail,
   getDartaById,
+  getNotificationsById,
 };
 
 /*

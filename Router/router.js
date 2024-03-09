@@ -47,4 +47,9 @@ router
 // stripe
 router.route("/postPaymentIntent").post(stripeRouter.postPaymentIntent);
 
+//Notification
+router
+  .route("/getNotificationsById/:email")
+  .get(dartarouter.getNotificationsById);
+
 module.exports = router;
