@@ -214,7 +214,7 @@ const verifyDarta = async (req, res) => {
           // todo
 
           let acceptRejectMessage =
-            "Congratulations your company has been rejistred sucessfully!";
+            "Congratulations your company has been registered sucessfully!";
           let mobileNumber = req.body.mobileNumber;
 
           const logSql =

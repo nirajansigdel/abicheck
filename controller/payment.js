@@ -17,7 +17,7 @@ const addPayment = (req, res) => {
     Package: package,
     CreatedDate: createdDate,
     EndDate: endDate.toISOString().slice(0, 19).replace("T", " "),
-    DartaId:1
+    DartaId:dartaId
   };
 
   const sqlQuery = "INSERT INTO payment SET ?";
