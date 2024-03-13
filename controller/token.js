@@ -111,6 +111,8 @@ const createToken = async (req, res) => {
 const validateToken = (req, res) => {
   const { token, walletId } = req.body;
   const sqlQuery = "SELECT * FROM token where WalletId=? AND Token=?";
+  const query = "UPDATE rds.authentication SET isOtpValid=? where email=?";
+  let isValid = false;
 
   connector.connection.query(
     sqlQuery,
@@ -123,10 +125,29 @@ const validateToken = (req, res) => {
       console.log({ results });
       if (results.length === 0) {
         // User with the given walletId does not exist
+        isValid = false;
+        connector.connection.query(
+          query,
+          [isValid, walletId],
+          async (error, results, fields) => {
+            if (error) {
+              console.error(error);
+            }
+          }
+        );
         return res.status(400).json({ message: "Token does not exist" });
       }
-
       if (results.length > 0) {
+        isValid = true;
+        connector.connection.query(
+          query,
+          [isValid, walletId],
+          async (error, results, fields) => {
+            if (error) {
+              console.error(error);
+            }
+          }
+        );
         return res.status(200).json({ message: "Valid token" });
       }
     }

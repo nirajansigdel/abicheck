@@ -67,6 +67,9 @@ const Login = async (req, res) => {
         return res.status(401).json({ message: "Password invalid" });
       }
 
+      if (!user.isOtpValid)
+        return res.status(401).json({ message: "Token not validated" });
+
       // Include the user role in the response
       res.status(200).json({ message: "Login successfully", userDetail: user });
     });
@@ -76,7 +79,39 @@ const Login = async (req, res) => {
   }
 };
 
+const reVerifyUserToken = async (req, res) => {
+  const { email } = req.params;
+  console.log({ email });
+  try {
+    const query = "SELECT * FROM authentication WHERE email=?";
+    databaseconnector.connection.query(
+      query,
+      [email],
+      async (error, result) => {
+        if (error) {
+          return res.status(500).json({ message: "Database connection error" });
+        }
+        if (result.length === 0) {
+          return res.status(401).json({ message: "User not Registered" });
+        }
+        const user = result[0];
+
+        if (!user.isOtpValid) {
+          const req = { body: { walletId: email } };
+          await createToken(req, res);
+        }
+        // Include the user role in the response
+        res.status(200).json({ message: "Token Sent", userDetail: user });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   Login,
   Registration,
+  reVerifyUserToken,
 };

@@ -543,6 +543,37 @@ const getNotificationsById = async (req, res) => {
     }
   });
 };
+
+const putDarta = async (req, res) => {
+  const { name, type, pan, email, phone, address, date, document } = req.body;
+
+  try {
+    if (!name || !type || !email || !phone || !address || !date || !document) {
+      return res.status(400).json({ message: "Fields cannot be empty" });
+    }
+
+    const sql =
+      "UPDATE darta SET name=?, type=?, address=?, Phone=?, Email=?, document=?, date=? WHERE Email=?";
+
+    databaseConnector.connection.query(
+      sql,
+      [name, type, address, phone, email, document, date, email],
+      (error, result) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: "Database error" });
+        }
+        console.log({ result });
+        return res
+          .status(200)
+          .json({ message: "Insert successfully", data: result.insertId });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 module.exports = {
   Darta,
   getAllDarta,
@@ -561,6 +592,7 @@ module.exports = {
   isDupEmail,
   getDartaById,
   getNotificationsById,
+  putDarta,
 };
 
 /*

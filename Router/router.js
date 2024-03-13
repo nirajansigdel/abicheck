@@ -10,6 +10,8 @@ const router = express.Router();
 
 router.route("/login").post(authrouter.Login);
 router.route("/register").post(authrouter.Registration);
+router.route("/reVerifyUserToken/:email").put(authrouter.reVerifyUserToken);
+
 router.route("/darta").post(dartarouter.Darta);
 router.route("/getdarta").get(dartarouter.getAllDarta);
 router.route("/getDartaById/:id").get(dartarouter.getDartaById);
@@ -27,6 +29,7 @@ router.route("/putDartaVerify").put(dartarouter.putVerifyDarta);
 router.route("/putDiscardVerify").put(dartarouter.putDiscardVerify);
 router.route("/isDupEmail/:email").post(dartarouter.isDupEmail);
 router.route("/isDupName/:name").post(dartarouter.isDupName);
+router.route("/register-darta").put(dartarouter.putDarta);
 
 //wallet
 router.route("/add-wallet").post(walletRouter.addNewUser);
