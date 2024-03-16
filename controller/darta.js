@@ -251,7 +251,7 @@ const getDartaDetails = async (req, res) => {
       }
 
       if (result && result.length <= 0) {
-        return res.status(400).json({ message: "Data not found" });
+        return res.status(200).json({ message: "Data not found",dataResults:[]  });
       }
 
       return res

@@ -9,15 +9,14 @@ const addPayment = (req, res) => {
 
   const createdDate = new Date().toISOString().slice(0, 19).replace("T", " ");
   const endDate = new Date(createdDate);
-  endDate.setMonth(endDate.getMonth() + package);
+  endDate.setMonth(endDate.getMonth() + 12);
 
   const paymentData = {
     WalletId: walletId,
     Amount: amount,
     Package: package,
     CreatedDate: createdDate,
-    EndDate: endDate.toISOString().slice(0, 19).replace("T", " "),
-    DartaId:dartaId
+    EndDate: endDate.toISOString().slice(0, 19).replace("T", " ")
   };
 
   const sqlQuery = "INSERT INTO payment SET ?";
